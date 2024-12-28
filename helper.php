@@ -17,13 +17,14 @@ function basePath($path = '')
  * @param string $name
  * @return void
  */
-function loadView(string $name): void
+function loadView(string $name, array $data = []): void
 {
     $path = basePath("views/{$name}.view.php");
     if (!file_exists($path)) {
         echo "view $name not found";
         return;
     }
+    extract($data);
     require $path;
 
 }
@@ -56,4 +57,14 @@ function dd(...$variable): void
     }
     echo "</pre>";
     die;
+}
+
+/**
+ * Summary of formatNumber
+ * @param string $number
+ * @return string
+ */
+function formatNumber(string $number): string
+{
+    return "$ " . number_format($number, 2);
 }
