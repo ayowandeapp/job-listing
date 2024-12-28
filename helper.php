@@ -11,3 +11,49 @@ function basePath($path = '')
 {
     return __DIR__ . '/' . $path;
 }
+
+/**
+ * Summary of loadView
+ * @param string $name
+ * @return void
+ */
+function loadView(string $name): void
+{
+    $path = basePath("views/{$name}.view.php");
+    if (!file_exists($path)) {
+        echo "view $name not found";
+        return;
+    }
+    require $path;
+
+}
+
+/**
+ * Summary of loadPartials
+ * @param string $name
+ * @return void
+ */
+function loadPartials(string $name): void
+{
+    $path = basePath("views/partials/{$name}.view.php");
+    if (!file_exists($path)) {
+        echo "view $name not found";
+        return;
+    }
+    require $path;
+}
+
+/**
+ * inspect and die
+ * @param mixed $value
+ * @return void
+ */
+function dd(...$variable): void
+{
+    echo "<pre>";
+    foreach ($variable as $key => $value) {
+        var_dump($value);
+    }
+    echo "</pre>";
+    die;
+}
