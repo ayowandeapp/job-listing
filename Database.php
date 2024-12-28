@@ -29,10 +29,15 @@ class Database
      * @throws \Exception
      * @return PDOStatement
      */
-    public function query(string $query): PDOStatement
+    public function query(string $query, $params = []): PDOStatement
     {
         try {
             $sth = $this->conn->prepare($query);
+
+            //bind the params - prepared statement
+            foreach ($params as $key => $value) {
+                $sth->bindValue(":$key", $value);
+            }
             $sth->execute();
             return $sth;
         } catch (\PDOException $e) {
