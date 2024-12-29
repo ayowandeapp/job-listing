@@ -1,0 +1,16 @@
+{
+    "name": "ayowande/joblisting",
+    "description": "job listing application",
+    "autoload": {
+        "psr-4": {
+            "Framework\\": "Framework/",
+            "App\\": "App/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Ayowande Oluwatosin",
+            "email": "ayooluwa71@gmail.com"
+        }
+    ]
+}
