@@ -68,3 +68,14 @@ function formatNumber(string $number): string
 {
     return "$ " . number_format($number, 2);
 }
+
+function sanitize(string $dirty): string
+{
+    return filter_var($dirty, FILTER_SANITIZE_SPECIAL_CHARS);
+}
+
+function redirect(string $uri): never
+{
+    header("Location: $uri");
+    exit;
+}
