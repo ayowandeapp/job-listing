@@ -30,4 +30,9 @@ class Validation
 
         return $value1 === $value2;
     }
+
+    public static function int(mixed $value): bool
+    {
+        return is_int($value);
+    }
 }

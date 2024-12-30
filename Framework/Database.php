@@ -47,7 +47,7 @@ class Database
             $sth->execute();
             return $sth;
         } catch (\PDOException $e) {
-            throw new Exception("Error Processing Request", $e->getCode());
+            throw new Exception("Error Processing Request $e", $e->getCode());
 
         }
 

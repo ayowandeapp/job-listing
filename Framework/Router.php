@@ -2,6 +2,7 @@
 namespace Framework;
 
 use App\Controllers\ErrorController;
+use Exception;
 
 class Router
 {
@@ -54,10 +55,10 @@ class Router
     /**
      * Add a put route
      * @param string $uri
-     * @param string $controller
+     * @param string|array $controller
      * @return void
      */
-    public function put(string $uri, string $controller): void
+    public function put(string $uri, string|array $controller): void
     {
         $this->registerRoute('PUT', $uri, $controller);
     }
@@ -65,17 +66,18 @@ class Router
     /**
      * Add a delete route
      * @param string $uri
-     * @param string $controller
+     * @param string|array $controller
      * @return void
      */
-    public function delete(string $uri, string $controller): void
+    public function delete(string $uri, string|array $controller): void
     {
         $this->registerRoute('DELETE', $uri, $controller);
     }
 
     public function route(string $uri)
     {
-        $requestMethod = $_SERVER['REQUEST_METHOD'];
+        $requestMethod = $this->determineRequestMethod();
+
         foreach ($this->routes as $key => $route) {
             //split the current uri
             $uriSegment = explode('/', trim($uri, '/')); // e.g ['listing', 2]
@@ -83,42 +85,36 @@ class Router
             $routeSegment = explode('/', trim($route['uri'], '/')); //e.g ['listing', '{id}']
 
             //check if no of segment matches and the method match as well
+
             if (
-                count($uriSegment) === count($routeSegment) &&
-                strtoupper($route['method'] === $requestMethod)
+                count($uriSegment) !== count($routeSegment) ||
+                strtoupper($route['method']) !== $requestMethod
             ) {
-                $params = [];
-                $match = true;
-                for ($i = 0; $i < count($uriSegment); $i++) {
-                    //if uri do not match and there is no param
-                    if (
-                        $routeSegment[$i] !== $uriSegment[$i] &&
-                        !preg_match('/\{(.+?)\}/', $routeSegment[$i])
-                    ) {
-                        $match = false;
-                        break;
-
-                    }
-
-                    //check for the params and add to the params array
-                    if (preg_match('/\{(.+?)\}/', $routeSegment[$i], $matches)) {
-                        $params[$matches[$i]] = $uriSegment[$i];
-                    }
-                }
-
-                if ($match) {
-                    $controller = str_contains($route['controller'], 'App\\Controllers\\') ? $route['controller'] : "App\\Controllers\\{$route['controller']}";
-                    $controllerMethod = $route['classMethod'];
-                    //init the controller and call the method
-                    $controllerInit = new $controller();
-                    $controllerInit->$controllerMethod($params);
-                    // require basePath('App/' . $route['controller']);
-
-                    return;
-                }
-
+                continue;
             }
 
+            $params = [];
+            $match = true;
+            for ($i = 0; $i < count($uriSegment); $i++) {
+                //if uri do not match and there is no param
+                if (
+                    $routeSegment[$i] !== $uriSegment[$i] &&
+                    !preg_match('/\{(.+?)\}/', $routeSegment[$i])
+                ) {
+                    $match = false;
+                    break;
+                }
+                // dd($uriSegment, $routeSegment);
+
+                //check for the dynamic params and add to the params array
+                $this->isDynamicSegment($routeSegment[$i], $uriSegment[$i], $params);
+            }
+
+            if ($match) {
+                $this->invokeController($route, $params);
+                // require basePath('App/' . $route['controller']);
+                return;
+            }
 
             // if ($route['uri'] === $uri && $route['method'] == $method) {
             //     $controller = str_contains($route['controller'], 'App\\Controllers\\') ? $route['controller'] : "App\\Controllers\\{$route['controller']}";
@@ -134,6 +130,38 @@ class Router
 
         $this->error();
 
+    }
+
+    private function determineRequestMethod(): string
+    {
+        $method = $_SERVER['REQUEST_METHOD'];
+        if ($method === 'POST' && isset($_POST['_method'])) {
+            $method = strtoupper($_POST['_method']);
+        }
+        return $method;
+    }
+
+    private function isDynamicSegment(string $routeSegment, string $uriSegment, array &$params): bool
+    {
+        if (preg_match('/\{(.+?)\}/', $routeSegment, $matches)) {
+            $params[$matches[1]] = $uriSegment;
+            return true;
+        }
+        return false;
+    }
+    private function invokeController(array $route, array $params): void
+    {
+        $controller = str_contains($route['controller'], 'App\\Controllers\\')
+            ? $route['controller']
+            : "App\\Controllers\\{$route['controller']}";
+        $controllerMethod = $route['classMethod'];
+
+        if (method_exists($controller, $controllerMethod)) {
+            $controllerInstance = new $controller();
+            $controllerInstance->$controllerMethod($params);
+        } else {
+            throw new Exception("Method {$controllerMethod} not found in {$controller}");
+        }
     }
 
     /**

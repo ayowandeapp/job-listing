@@ -16,8 +16,14 @@ $router->get('/listings', [ListingController::class, 'index']);
 $router->post('/listings', [ListingController::class, 'store']);
 
 $router->get('/listings/create', [ListingController::class, 'create']);
+$router->get('/listings/edit/{id}', [ListingController::class, 'edit']);
 
-$router->get('/listing/{id}', [ListingController::class, 'show']);
+$router->get('/listings/{id}', [ListingController::class, 'show']);
+
+
+$router->put('/listings/{id}', [ListingController::class, 'update']);
+
+$router->delete('/listings/{id}', [ListingController::class, 'delete']);
 
 
 
