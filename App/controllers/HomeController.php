@@ -13,7 +13,9 @@ class HomeController extends Controller
     public function index(array $request = [])
     {
 
-        $listings = $this->db->query("SELECT * FROM listings Limit 6")->fetchAll();
+        $listings = $this->db->query(
+            "SELECT * FROM listings ORDER BY created_at DESC Limit 6"
+        )->fetchAll();
 
         loadView('home', compact('listings'));
 

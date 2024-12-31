@@ -3,13 +3,34 @@ namespace Framework;
 
 use App\Controllers\ErrorController;
 use Exception;
+use Framework\Middleware\Authorize;
 
 class Router
 {
     protected $routes = [];
 
-    private function registerRoute(string $method, string $uri, string|array $action)
+    public $middleware;
+
+    public function __construct()
     {
+        $this->middleware = new Authorize;
+
+    }
+
+    public function addRouteMiddleware(array $middlewares)
+    {
+        foreach ($middlewares as $key => $middleware) {
+            $routeKey = array_key_last($this->routes);
+            $this->routes[$routeKey]['middleware'][] = $middleware;
+        }
+
+    }
+
+    private function registerRoute(
+        string $method,
+        string $uri,
+        string|array $action
+    ) {
         if (is_string($action)) {
             if (!str_contains($action, '@')) {
                 return;
@@ -23,7 +44,8 @@ class Router
             'method' => $method,
             'uri' => $uri,
             'controller' => $controller,
-            'classMethod' => $classMethod
+            'classMethod' => $classMethod,
+            'middleware' => []
         ];
 
     }
@@ -32,11 +54,11 @@ class Router
      * Add a GET route
      * @param string $uri
      * @param string|array $controller
-     * @return void
      */
-    public function get(string $uri, string|array $controller): void
+    public function get(string $uri, string|array $controller)
     {
         $this->registerRoute('GET', $uri, $controller);
+        return $this;
     }
 
 
@@ -44,11 +66,11 @@ class Router
      * Add a Post route
      * @param string $uri
      * @param string|array $controller
-     * @return void
      */
-    public function post(string $uri, string|array $controller): void
+    public function post(string $uri, string|array $controller)
     {
         $this->registerRoute('POST', $uri, $controller);
+        return $this;
     }
 
 
@@ -56,22 +78,22 @@ class Router
      * Add a put route
      * @param string $uri
      * @param string|array $controller
-     * @return void
      */
-    public function put(string $uri, string|array $controller): void
+    public function put(string $uri, string|array $controller)
     {
         $this->registerRoute('PUT', $uri, $controller);
+        return $this;
     }
 
     /**
      * Add a delete route
      * @param string $uri
      * @param string|array $controller
-     * @return void
      */
-    public function delete(string $uri, string|array $controller): void
+    public function delete(string $uri, string|array $controller)
     {
         $this->registerRoute('DELETE', $uri, $controller);
+        return $this;
     }
 
     public function route(string $uri)
@@ -111,6 +133,9 @@ class Router
             }
 
             if ($match) {
+                foreach ($route['middleware'] as $key => $middleware) {
+                    (new Authorize)->handle($middleware);
+                }
                 $this->invokeController($route, $params);
                 // require basePath('App/' . $route['controller']);
                 return;
@@ -151,6 +176,8 @@ class Router
     }
     private function invokeController(array $route, array $params): void
     {
+        $request = array_merge($_GET, $_POST);
+
         $controller = str_contains($route['controller'], 'App\\Controllers\\')
             ? $route['controller']
             : "App\\Controllers\\{$route['controller']}";
@@ -158,7 +185,7 @@ class Router
 
         if (method_exists($controller, $controllerMethod)) {
             $controllerInstance = new $controller();
-            $controllerInstance->$controllerMethod($params);
+            $controllerInstance->$controllerMethod($params, request: $request);
         } else {
             throw new Exception("Method {$controllerMethod} not found in {$controller}");
         }
