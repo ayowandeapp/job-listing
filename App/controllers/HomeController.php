@@ -2,12 +2,17 @@
 
 namespace App\Controllers;
 
+use App\Services\ValidatorService;
+use Framework\Database;
+
 
 class HomeController extends Controller
 {
-    public function __construct()
-    {
-        parent::__construct();
+    public function __construct(
+        protected ValidatorService $validatorService,
+        protected Database $db
+    ) {
+
 
     }
     public function index(array $request = [])
