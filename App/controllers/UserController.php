@@ -23,33 +23,12 @@ class UserController extends Controller
 
     public function store()
     {
-        $email = $_POST['email'];
-        $errors = [];
-        if (!Validation::email($email)) {
-            $errors['email'] = 'Please enter a valid email address';
-        }
-
-        //check if email exist
-        $params = [
-            'email' => $_POST['email']
-        ];
-
-        $user = $this->db->query('SELECT * FROM users WHERE email = :email', $params)->fetch();
-        if ($user) {
-            $errors['email1'] = 'Email already exist!';
-        }
-
-        if (!Validation::string($_POST['name'], 2, 50)) {
-            $errors['name'] = 'Name must be between two and 50 characters';
-        }
-
-        if (!Validation::string($_POST['password'], 6)) {
-            $errors['password'] = 'Password must be at least 6 characters';
-        }
+        $errors = $this->validatorService->validateRegister($_POST);
 
         if (!Validation::match($_POST['password'], $_POST['password_confirmation'])) {
             $errors['password_confirmation'] = 'Passwords do not match';
         }
+
         if (!empty($errors)) {
             loadView('users/create', [
                 'errors' => $errors,
@@ -57,6 +36,11 @@ class UserController extends Controller
             ]);
             exit;
         }
+
+        //check if email exist
+        $params = [
+            'email' => $_POST['email']
+        ];
         $acceptedFields = ['name', 'email', 'city', 'state', 'password'];
 
         $params = array_intersect_key($_POST, array_flip($acceptedFields));
@@ -94,16 +78,8 @@ class UserController extends Controller
 
     public function authenticate()
     {
-        $email = $_POST['email'];
-        $errors = [];
-        if (!Validation::email($email)) {
-            $errors['email'] = 'Please enter a valid email address';
-        }
 
-        if (!Validation::string($_POST['password'])) {
-            $errors['password'] = 'Password field required';
-        }
-
+        $errors = $this->validatorService->validateLogin($_POST);
         if (!empty($errors)) {
             loadView('users/login', [
                 'errors' => $errors,
@@ -111,6 +87,8 @@ class UserController extends Controller
             ]);
             exit;
         }
+
+        $email = $_POST['email'];
 
         $user = $this->db->query(
             "SELECT * FROM users WHERE email = :email",

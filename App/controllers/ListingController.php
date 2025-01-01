@@ -13,10 +13,11 @@ class ListingController extends Controller
         parent::__construct();
 
     }
-    public function index(array $params = [], array $request = []): void
+    public function index(array $params = []): void
     {
-        $keywords = $request['keywords'] ?: '';
-        $location = $request['location'] ?: '';
+        $request = $_GET ?? [];
+        $keywords = $request['keywords'] ?? '';
+        $location = $request['location'] ?? '';
 
         $sql = "SELECT * FROM listings";
 
@@ -80,21 +81,12 @@ class ListingController extends Controller
         ];
         $newListingData = array_intersect_key($_POST, array_flip($allowedFields));
         $newListingData['user_id'] = Session::get('user')['id'];
-        $newListingData = array_map('sanitize', $newListingData);
 
-        $requiredFields = ['title', 'salary', 'description', 'email', 'city', 'state'];
-        $errors = [];
-        foreach ($requiredFields as $field) {
-            if (
-                empty($newListingData[$field]) ||
-                !Validation::string($newListingData[$field])
-            ) {
-                $errors[$field] = ucfirst($field) . ' is required!';
+        $errors = $this->validatorService->validateCreateListing($newListingData);
 
-            }
-        }
 
-        if (!empty($errors)) {
+
+        if (count($errors)) {
             //reload view with errrors
             loadView('listings/create', [
                 'errors' => $errors,
@@ -102,6 +94,27 @@ class ListingController extends Controller
             ]);
             return;
         }
+
+        // $requiredFields = ['title', 'salary', 'description', 'email', 'city', 'state'];        
+        // $errors = [];
+        // foreach ($requiredFields as $field) {
+        //     if (
+        //         empty($newListingData[$field]) ||
+        //         !Validation::string($newListingData[$field])
+        //     ) {
+        //         $errors[$field] = ucfirst($field) . ' is required!';
+
+        //     }
+        // }
+
+        // if (!empty($errors)) {
+        //     //reload view with errrors
+        //     loadView('listings/create', [
+        //         'errors' => $errors,
+        //         'listing' => $newListingData
+        //     ]);
+        //     return;
+        // }
 
         $fields = [];
         $values = [];

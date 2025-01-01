@@ -78,5 +78,6 @@ function sanitize(string $dirty): string
 function redirect(string $uri): never
 {
     header("Location: $uri");
+    http_response_code(302);
     exit;
 }

@@ -3,9 +3,13 @@
 
 use Framework\Router;
 use Framework\Session;
-require __DIR__ . '/../vendor/autoload.php';
 
 require '../helper.php';
+
+$app = require __DIR__ . '/../App/bootstrap.php';
+
+//route the request
+$app->run();
 // require loadView('home');
 // require basePath('Framework/Router.php');
 // require basePath('Framework/Database.php');
@@ -17,14 +21,3 @@ require '../helper.php';
 //         require $path;
 //     }
 // });
-
-Session::start();
-//init router
-$router = new Router;
-//get routes
-$routes = require basePath('routes.php');
-// get current uri and method
-$uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
-
-//route the request
-$router->route($uri);

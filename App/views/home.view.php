@@ -1,6 +1,6 @@
 <?= loadPartials('head') ?>
 <?= loadPartials('header') ?>
-<?= loadPartials('showcase-search', ['request' => $request]) ?>
+<?= loadPartials('showcase-search', ['request' => $request ?? '']) ?>
 <?= loadPartials('top-banner') ?>
 <!-- Job Listings -->
 <section>
