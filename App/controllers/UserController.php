@@ -2,12 +2,16 @@
 
 namespace App\Controllers;
 
+use App\Services\ValidatorService;
+use Framework\Database;
 use Framework\Session;
 use Framework\Validation;
 class UserController extends Controller
 {
-    public function __construct()
-    {
+    public function __construct(
+        protected ValidatorService $validatorService,
+        protected Database $db
+    ) {
         parent::__construct();
 
     }

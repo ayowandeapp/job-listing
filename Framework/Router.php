@@ -9,7 +9,7 @@ class Router
 {
     protected $routes = [];
 
-    public $middleware;
+    public array $middleware = [];
 
     public function __construct()
     {
@@ -87,7 +87,7 @@ class Router
         return $this;
     }
 
-    public function route(string $uri)
+    public function route(string $uri, Container $container = null)
     {
         $requestMethod = $this->determineRequestMethod();
 
@@ -124,16 +124,18 @@ class Router
             }
 
             //put the controller in a function
-            $action = fn() => $this->invokeController($route, $params);
+            $action = fn() => $this->invokeController($route, $params, $container);
 
             if ($match) {
+
                 foreach ($route['middleware'] as $key => $middleware) {
                     // (new Authorize)->handle($middleware);
                     //find where the $middleware = key of $this->middleware
-                    $middleware = array_column($this->middleware, $middleware)[0];
-
+                    $middleware = $this->middleware[$middleware];
                     $action = fn() => (new $middleware)->handle($action);
                 }
+
+
                 // require basePath('App/' . $route['controller']);
                 $action();
                 return;
@@ -171,15 +173,17 @@ class Router
         }
         return false;
     }
-    private function invokeController(array $route, array $params): void
+    private function invokeController(array $route, array $params, Container $container = null): void
     {
         $controller = str_contains($route['controller'], 'App\\Controllers\\')
             ? $route['controller']
             : "App\\Controllers\\{$route['controller']}";
+
         $controllerMethod = $route['classMethod'];
 
         if (method_exists($controller, $controllerMethod)) {
-            $controllerInstance = new $controller();
+
+            $controllerInstance = $container ? $container->resolve($controller) : $controller(); //use container to resolve dependencies
             $controllerInstance->$controllerMethod($params);
         } else {
             throw new Exception("Method {$controllerMethod} not found in {$controller}");
@@ -196,7 +200,7 @@ class Router
 
     public function addMiddleware(array $middleware)
     {
-        $this->middleware[] = $middleware;
+        $this->middleware = [...$this->middleware, ...$middleware];
     }
 
     /**

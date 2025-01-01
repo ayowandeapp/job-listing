@@ -7,17 +7,17 @@ use Framework\Database;
 
 class Controller
 {
-    protected $db;
+    // protected $db;
 
-    protected $validatorService;
+    // protected $validatorService;
 
     public function __construct()
     {
-        $config = require basePath('App/Config/db.php');
+        // $config = require basePath('App/Config/db.php');
 
-        $this->db = new Database($config);
+        // $this->db = new Database($config);
 
-        $this->validatorService = new ValidatorService;
+        // $this->validatorService = new ValidatorService;
 
     }
 }

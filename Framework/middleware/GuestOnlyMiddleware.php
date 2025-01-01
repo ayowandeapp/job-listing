@@ -14,7 +14,7 @@ class GuestOnlyMiddleware implements MiddlewareInterface
     public function handle(callable $next)
     {
         if ($this->isAuthenticated()) {
-            return redirect('/auth/login');
+            return redirect('/listings');
         }
 
         //call the controller class and method
