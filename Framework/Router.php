@@ -13,16 +13,7 @@ class Router
 
     public function __construct()
     {
-        $this->middleware = new Authorize;
-
-    }
-
-    public function addRouteMiddleware(array $middlewares)
-    {
-        foreach ($middlewares as $key => $middleware) {
-            $routeKey = array_key_last($this->routes);
-            $this->routes[$routeKey]['middleware'][] = $middleware;
-        }
+        // $this->middleware = new Authorize;
 
     }
 
@@ -132,12 +123,19 @@ class Router
                 $this->isDynamicSegment($routeSegment[$i], $uriSegment[$i], $params);
             }
 
+            //put the controller in a function
+            $action = fn() => $this->invokeController($route, $params);
+
             if ($match) {
                 foreach ($route['middleware'] as $key => $middleware) {
-                    (new Authorize)->handle($middleware);
+                    // (new Authorize)->handle($middleware);
+                    //find where the $middleware = key of $this->middleware
+                    $middleware = array_column($this->middleware, $middleware)[0];
+
+                    $action = fn() => (new $middleware)->handle($action);
                 }
-                $this->invokeController($route, $params);
                 // require basePath('App/' . $route['controller']);
+                $action();
                 return;
             }
 
@@ -154,7 +152,6 @@ class Router
         }
 
         $this->error();
-
     }
 
     private function determineRequestMethod(): string
@@ -176,8 +173,6 @@ class Router
     }
     private function invokeController(array $route, array $params): void
     {
-        $request = array_merge($_GET, $_POST);
-
         $controller = str_contains($route['controller'], 'App\\Controllers\\')
             ? $route['controller']
             : "App\\Controllers\\{$route['controller']}";
@@ -185,10 +180,23 @@ class Router
 
         if (method_exists($controller, $controllerMethod)) {
             $controllerInstance = new $controller();
-            $controllerInstance->$controllerMethod($params, request: $request);
+            $controllerInstance->$controllerMethod($params);
         } else {
             throw new Exception("Method {$controllerMethod} not found in {$controller}");
         }
+    }
+
+    public function addRouteMiddleware(array $middlewares)
+    {
+        foreach ($middlewares as $key => $middleware) {
+            $routeKey = array_key_last($this->routes);
+            $this->routes[$routeKey]['middleware'][] = $middleware;
+        }
+    }
+
+    public function addMiddleware(array $middleware)
+    {
+        $this->middleware[] = $middleware;
     }
 
     /**

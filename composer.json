@@ -5,12 +5,20 @@
         "psr-4": {
             "Framework\\": "Framework/",
             "App\\": "App/"
-        }
+        },
+        "files": [
+            "App/Config/Routes.php",
+            "App/Config/Middleware.php"
+        ]
+
     },
     "authors": [
         {
             "name": "Ayowande Oluwatosin",
             "email": "ayooluwa71@gmail.com"
         }
-    ]
+    ],
+    "require": {
+        "vlucas/phpdotenv": "^5.6"
+    }
 }
